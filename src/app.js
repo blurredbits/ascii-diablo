@@ -4,7 +4,15 @@ import Phaser from 'phaser';
 
 let platforms;
 let player;
+let stars;
+let score = 0;
+let scoreText;
 
+const collectStar = (player, star) => {
+  star.kill();
+  score += 9001;
+  scoreText.text = 'Score: ' + score;
+}
 
 const preload = () => {
   game.load.image('sky', './assets/sky.png');
@@ -16,10 +24,22 @@ const preload = () => {
 const create = () => {
   game.physics.startSystem(Phaser.Physics.ARCADE);
   game.add.sprite(0, 0, 'sky');
+
+  stars = game.add.group();
+  stars.enableBody = true;
+
   platforms = game.add.group();
   platforms.enableBody = true;
 
+  for(let i = 0; i < 12; i++) {
+    let star = stars.create(i * 70, 0, 'star');
+
+    star.body.gravity.y = 6;
+    star.body.bounce.y = 0.7 + Math.random() * 0.2;
+  }
   let ground = platforms.create(0, game.world.height - 64, 'ground');
+
+  scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000'} )
 
   ground.scale.setTo(2, 2);
 
@@ -47,9 +67,12 @@ const create = () => {
 
 const update = () => {
   game.physics.arcade.collide(player, platforms);
-  
+  game.physics.arcade.collide(stars, platforms);
+
+  game.physics.arcade.overlap(player, stars, collectStar, null, this);
+
   let cursors = game.input.keyboard.createCursorKeys();
-  
+
   player.body.velocity.x = 0;
 
   if (cursors.left.isDown) {
